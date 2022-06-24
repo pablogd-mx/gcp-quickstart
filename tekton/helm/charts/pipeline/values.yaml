@@ -1,0 +1,14 @@
+
+images:
+  fetch: private-cloud.registry.mendix.com/mxpc-pipeline-tools:git-init-0.0.1
+  verExtraction: private-cloud.registry.mendix.com/mxpc-pipeline-tools-cli:0.0.4
+  build: private-cloud.registry.mendix.com/mxbuild # tag depends from extracted mx version from source code
+  imageBuild: private-cloud.registry.mendix.com/mxpc-pipeline-tools:imagebuild-0.0.1
+  constantsAndEventsResolver: private-cloud.registry.mendix.com/mxpc-pipeline-tools-cli:0.0.4
+  k8sPatch: private-cloud.registry.mendix.com/mxpc-pipeline-tools-cli:0.0.4
+  createAppEnv: private-cloud.registry.mendix.com/mxpc-pipeline-tools-cli:0.0.4
+  deleteAppEnv: private-cloud.registry.mendix.com/mxpc-pipeline-tools-cli:0.0.4
+  configureAppEnv: private-cloud.registry.mendix.com/mxpc-pipeline-tools-cli:0.0.4
+
+  runtimeBase: private-cloud.registry.mendix.com/runtime-base # tag depends from received tag param in the pipeline
+  imagePushURL:

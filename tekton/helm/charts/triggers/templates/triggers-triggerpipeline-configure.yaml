@@ -1,0 +1,83 @@
+{{ if .Values.addAppConfigureTrigger }}
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: mx-pipeline-configure-template-{{ .Values.name }}
+spec:
+  params:
+    - name: namespace
+      description: k8s namespace with operator.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config.
+      default: "none"
+    - name: source-url
+      description: .mda file url or oci-image url. Remains the same if empty.
+      default: "none"
+    - name: replicas
+      description: number of replicas. Remains the same if empty.
+      default: "none"
+    - name: set-constants
+      description: |
+        Constants to set as JSON map. Replaces the old list with the new one. Value example: {"KEY":"VALUE"}.
+      default: none
+    - name: add-constants
+      description: |
+        constants to add as JSON map. Value example: {"KEY":"VALUE"}.
+      default: "{}"
+    - name: remove-constants
+      description: |
+        constants to delete as JSON array. Value example: ["KEY1","KEY2"].
+      default: "[]"
+    - name: set-env-vars
+      description: |
+        Environment variables to set as JSON map. Replaces the old list with the new one. Value example: {"KEY":"VALUE"}.
+      default: none
+    - name: add-env-vars
+      description: |
+        environment variables to add as JSON map. Value example: {"KEY":"VALUE"}.
+      default: "{}"
+    - name: remove-env-vars
+      description: |
+        environment variables to delete as JSON array. Value example: ["KEY1","KEY2"].
+      default: "[]"
+    - name: dtap-mode
+      description: |
+        mode for running the Mendix application.
+        Available options:
+          P - production
+          D - Development
+        Always set this to P in production environments.
+      default: ""
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: mx-pipeline-configure-run-{{ .Values.name }}-
+      spec:
+        serviceAccountName: tekton-triggers-mx-sa
+        pipelineRef:
+          name: configure-app-pipeline
+        params:
+          - name: namespace
+            value: $(tt.params.namespace)
+          - name: env-internal-name
+            value: $(tt.params.env-internal-name)
+          - name: kube-secret-name
+            value: $(tt.params.kube-secret-name)
+          - name: source-url
+            value: $(tt.params.source-url)
+          - name: replicas
+            value: $(tt.params.replicas)
+          - name: add-constants
+            value: $(tt.params.add-constants)
+          - name: remove-constants
+            value: $(tt.params.remove-constants)
+          - name: add-env-vars
+            value: $(tt.params.add-env-vars)
+          - name: remove-env-vars
+            value: $(tt.params.remove-env-vars)
+          - name: dtap-mode
+            value: $(tt.params.dtap-mode)
+  {{ end }}

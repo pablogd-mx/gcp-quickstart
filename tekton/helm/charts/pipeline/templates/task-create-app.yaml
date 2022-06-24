@@ -1,0 +1,61 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: create-app-cr
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "create-app"
+spec:
+  description: >-
+    Creates MendixApp CR for the new environment.
+  params:
+    - name: namespace
+      description: k8s namespace.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: storage-plan-name
+      description: name of already created storage plan.
+    - name: database-plan-name
+      description: name of already created database plan.
+    - name: dtap-mode
+      description: |
+        mode for running the Mendix application.
+        Available options:
+          P - production
+          D - Development
+        Always set this to P in production environments.
+    - name: kube-secret-name
+      description: secret name with kube config.
+  steps:
+    - name: create-app
+      image: {{ .Values.images.createAppEnv }}
+      script: |
+        #!/usr/bin/env bash
+        set -e
+
+        ./mxpc-pipeline-tools-cli app-cr-create \
+            --storage-name=$(params.storage-plan-name) \
+            --database-name=$(params.database-plan-name) \
+            --dtap-mode=$(params.dtap-mode) \
+            -n $(params.namespace) $(params.env-internal-name)
+
+        # we can also use kubectl + pipe:
+        # ./mxpc-pipeline-tools-cli app-cr \
+        #            --storage-name=$(params.storage-plan-name) \
+        #            --database-name=$(params.database-plan-name) \
+        #            --dtap-mode=$(params.dtap-mode) \
+        #            $(params.env-internal-name) -n $(params.namespace) --dry-run | kubectl apply -f -
+
+        echo -n "MendixApp Custom Resource created."
+        echo
+
+      env:
+        - name: KUBECONFIG
+          valueFrom:
+            secretKeyRef:
+              name: $(params.kube-secret-name)
+              key: kubeconf
+              optional: true

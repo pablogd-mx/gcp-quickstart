@@ -1,0 +1,43 @@
+# Name of the environment. All created objects will have this suffix.
+name: default
+
+# Supported types - gitlabwebhook and generic
+triggerType: gitlabwebhook
+
+# Name of the build pipeline. By default using pipeline from pipeline chart.
+buildPipelineName: build-pipeline
+
+# Adds trigger to the listener that can create Mendix app.
+addAppCreateTrigger: true
+
+# Adds trigger to the listener that can delete Mendix app.
+addAppDeleteTrigger: true
+
+# Adds trigger to the listener that can configure Mendix app.
+addAppConfigureTrigger: true
+
+# gitlabwebhook used when 'triggerType: gitlabwebhook'.
+gitlabwebhook:
+  # Protocol has two options: 'http' or 'ssh'.
+  protocol: http
+
+  # Name of the namespace where operator lives.
+  operatorNamespace: dev
+
+  # Mendix Environment Internal Name. You can get the all internal environment names with the command: 'kubectl get mendixapps -n $namespace_name'.
+  mendixEnvironmentInernalName: somevalue
+
+  # Optional. Name of the secret with kube config. Used when operator is in another cluster.
+  kubeConfigSecretName: kube-secret-name
+
+  # Scheduled Events Mode has two options: 'manual' and 'auto'.
+  # manual - throws an error in case if scheduled events in myScheduledEvents field contains not existing events
+  # auto - removes not existing events from myScheduledEvents
+  scheduledEventsMode: manual
+
+  # Constants mode has two options: 'manual' and 'auto'.
+  # manual - ensures that constants on operator side are the same as inside .mda file otherwise throws an error.
+  # auto - adds/removes missing constants if any.
+  constantsMode: manual
+
+generic:

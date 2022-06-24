@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: k8spatch
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "k8spatch"
+spec:
+  description: >-
+    Patches MendixApp CRD with the new MDA file.
+  params:
+    - name: source-url
+      description: URL to mda file or oci-image.
+    - name: namespace
+      description: k8s namespace.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config.
+  steps:
+    - name: patch
+      image: {{ .Values.images.k8sPatch }}
+      script: |
+        #!/usr/bin/env bash
+
+        # trim mda-file variable
+        SOURCE_URL=$(echo "$(params.source-url)")
+        SOURCE_URL=$(echo "${SOURCE_URL}"|tr -d '\n')
+
+        ./mxpc-pipeline-tools-cli upd-src-url \
+            $(params.env-internal-name) -n $(params.namespace) ${SOURCE_URL}
+      env:
+        - name: KUBECONFIG
+          valueFrom:
+            secretKeyRef:
+              name: $(params.kube-secret-name)
+              key: kubeconf
+              optional: true

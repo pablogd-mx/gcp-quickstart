@@ -1,0 +1,68 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: resolve-constants-and-events
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "constantsEventsResolve"
+spec:
+  description: >-
+    Resolves constants and scheduled events.
+  workspaces:
+    - name: output
+      description: The git repo will be cloned onto the volume backing this workspace
+  params:
+    - name: mda-file
+      description: path to MDA file in workspace.
+    - name: namespace
+      description: k8s namespace.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config (optional).
+    - name: constants-mode
+      description: |
+        mode to handle constants.
+        Available modes:
+        manual - ensures that constants on operator side are the same as inside .mda file.
+        auto - adds/removes missing constants if any.
+      default: manual
+    - name: scheduled-events-mode
+      description: |
+        mode to handle scheduled events.
+        Available modes:
+        manual - ensures that scheduled events specified in myScheduledEvents CR field contains existing events.
+        auto - removes not existing scheduled events from myScheduledEvents CR field.
+      default: manual
+  steps:
+    - name: resolve-constants
+      image: {{ .Values.images.constantsAndEventsResolver }}
+      script: |
+        #!/usr/bin/env bash
+
+        ./mxpc-pipeline-tools-cli resolve-constants \
+            -m $(params.constants-mode) $(params.mda-file) $(params.env-internal-name) -n $(params.namespace)
+      env:
+        - name: KUBECONFIG
+          valueFrom:
+            secretKeyRef:
+              name: $(params.kube-secret-name)
+              key: kubeconf
+              optional: true
+    - name: resolve-scheduled-events
+      image: {{ .Values.images.constantsAndEventsResolver }}
+      script: |
+        #!/usr/bin/env bash
+
+        ./mxpc-pipeline-tools-cli resolve-scheduled-events \
+            -m $(params.scheduled-events-mode) $(params.mda-file) $(params.env-internal-name) -n $(params.namespace)
+      env:
+        - name: KUBECONFIG
+          valueFrom:
+            secretKeyRef:
+              name: $(params.kube-secret-name)
+              key: kubeconf
+              optional: true

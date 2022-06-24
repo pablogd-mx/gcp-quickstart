@@ -1,0 +1,116 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: mx-pipeline-listener-{{ .Values.name }}
+spec:
+  serviceAccountName: tekton-triggers-mx-sa
+  triggers:
+    - name: mx-pipline-build-trigger-{{ .Values.name }}
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+      {{ if eq .Values.triggerType "gitlabwebhook" }}
+              value: "has(header['X-Gitlab-Event'])"
+      {{ else }} # generic
+              value: "header.match('Event', 'build')"
+      {{ end }}
+      bindings:
+        - ref: mx-pipeline-build-binding-{{ .Values.name }}
+      template:
+        ref: mx-pipeline-build-template-{{ .Values.name }}
+    {{ if .Values.addAppCreateTrigger }}
+    - name: mx-pipline-create-app-trigger-{{ .Values.name }}
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+              value: "header.match('Event', 'create-app')"
+      bindings:
+        - name: namespace
+          value: $(body.namespace)
+        - name: env-internal-name
+          value: $(body.env-internal-name)
+        - name: storage-plan-name
+          value: $(body.storage-plan-name)
+        - name: database-plan-name
+          value: $(body.database-plan-name)
+        - name: dtap-mode
+          value: $(body.dtap-mode)
+      template:
+        spec:
+          params:
+          - name: namespace
+          - name: env-internal-name
+          - name: storage-plan-name
+          - name: database-plan-name
+          - name: dtap-mode
+          resourcetemplates:
+            - apiVersion: tekton.dev/v1beta1
+              kind: PipelineRun
+              metadata:
+                generateName: mx-pipeline-app-create-run-{{ .Values.name }}-
+              spec:
+                serviceAccountName: tekton-triggers-mx-sa
+                pipelineRef:
+                  name: create-app-pipeline
+                params:
+                  - name: namespace
+                    value: $(tt.params.namespace)
+                  - name: env-internal-name
+                    value: $(tt.params.env-internal-name)
+                  - name: storage-plan-name
+                    value: $(tt.params.storage-plan-name)
+                  - name: database-plan-name
+                    value: $(tt.params.database-plan-name)
+                  - name: dtap-mode
+                    value: $(tt.params.dtap-mode)
+    {{ end }}
+    {{ if .Values.addAppDeleteTrigger }}
+    - name: mx-pipline-delete-app-trigger-{{ .Values.name }}
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+              value: "header.match('Event', 'delete-app')"
+      bindings:
+        - name: namespace
+          value: $(body.namespace)
+        - name: env-internal-name
+          value: $(body.env-internal-name)
+      template:
+        spec:
+          params:
+            - name: namespace
+            - name: env-internal-name
+          resourcetemplates:
+            - apiVersion: tekton.dev/v1beta1
+              kind: PipelineRun
+              metadata:
+                generateName: mx-pipeline-app-delete-run-{{ .Values.name }}-
+              spec:
+                serviceAccountName: tekton-triggers-mx-sa
+                pipelineRef:
+                  name: delete-app-pipeline
+                params:
+                  - name: namespace
+                    value: $(tt.params.namespace)
+                  - name: env-internal-name
+                    value: $(tt.params.env-internal-name)
+    {{ end }}
+    {{ if .Values.addAppConfigureTrigger }}
+    - name: mx-pipline-configure-app-trigger-{{ .Values.name }}
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: "filter"
+              value: "header.match('Event', 'configure-app')"
+      bindings:
+        - ref: mx-pipeline-configure-binding-{{ .Values.name }}
+      template:
+        ref: mx-pipeline-configure-template-{{ .Values.name }}
+    {{ end }}

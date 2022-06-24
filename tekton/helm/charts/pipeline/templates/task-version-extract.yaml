@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mxver
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "mxver"
+spec:
+  description: >-
+    Extracts version of mendix application.
+  workspaces:
+    - name: output
+      description: The git repo will be cloned onto the volume backing this workspace
+  results:
+    - name: mpr-file
+      description: path of the project file in the source
+    - name: mx-version
+      description: mendix version
+  steps:
+    - name: version-extract
+      image: {{ .Values.images.verExtraction }}
+      script: |
+        #!/bin/sh
+
+        set -e
+
+        echo "[DEBUG] Build path: ${BUILD_PATH}"
+        echo "[DEBUG] MPR file path: ${MPR_FILE_PATH}"
+        echo "[DEBUG] Mendix version path: ${MX_VERSION_PATH}"
+
+        MPR_FILE=`./mxpc-pipeline-tools-cli mx-app-mpr-path ${BUILD_PATH}`
+        MX_VERSION=`./mxpc-pipeline-tools-cli mx-app-ver ${BUILD_PATH}`
+
+        echo -n "Found: "
+        echo -n $MPR_FILE | tee ${MPR_FILE_PATH}
+        echo
+
+        echo -n "Mendix version: "
+        echo -n $MX_VERSION | tee ${MX_VERSION_PATH}
+        echo
+      env:
+        - name: BUILD_PATH
+          value: $(workspaces.output.path)
+        - name: MPR_FILE_PATH
+          value: $(results.mpr-file.path)
+        - name: MX_VERSION_PATH
+          value: $(results.mx-version.path)

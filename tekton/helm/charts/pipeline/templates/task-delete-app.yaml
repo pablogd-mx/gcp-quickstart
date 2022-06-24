@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: delete-app-cr
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "delete-app"
+spec:
+  description: >-
+    Deletes MendixApp CR. Mendix operator should take care about cleanup.
+  params:
+    - name: namespace
+      description: k8s namespace.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config.
+  steps:
+    - name: delete-app
+      image: {{ .Values.images.deleteAppEnv }}
+      script: |
+        #!/usr/bin/env bash
+        set -e
+
+        ./mxpc-pipeline-tools-cli app-cr-delete -n $(params.namespace) $(params.env-internal-name)
+
+        # we can also use kubectl (we need to use image with kubectl):
+        # kubectl delete mendixapps -n $(params.namespace) $(params.env-internal-name)
+
+        echo -n "MendixApp Custom Resource deleted."
+        echo
+      env:
+        - name: KUBECONFIG
+          valueFrom:
+            secretKeyRef:
+              name: $(params.kube-secret-name)
+              key: kubeconf
+              optional: true

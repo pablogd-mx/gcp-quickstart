@@ -1,0 +1,11 @@
+
+images:
+  fetch: private-cloud.non-prod.registry.mendix.com/mxpc-pipeline-tools:git-init-master
+  verExtraction: private-cloud.non-prod.registry.mendix.com/mxpc-pipeline-tools-cli:master
+  build: private-cloud.non-prod.registry.mendix.com/mxbuild # tag depends from extracted mx version from source code
+  imageBuild: private-cloud.non-prod.registry.mendix.com/mxpc-pipeline-tools:imagebuild-master
+  constantsAndEventsResolver: private-cloud.non-prod.registry.mendix.com/mxpc-pipeline-tools-cli:master
+  k8sPatch: private-cloud.non-prod.registry.mendix.com/mxpc-pipeline-tools-cli:master
+
+  runtimeBase: private-cloud.registry.mendix.com/runtime-base # tag depends from received tag param in the pipeline
+  imagePushURL:

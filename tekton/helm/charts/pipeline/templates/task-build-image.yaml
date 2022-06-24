@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-push-image
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "build-push-image"
+spec:
+  description: >-
+    Builds an image and push it to registry.
+  params:
+    - name: mda-file
+      description: path to MDA file in workspace
+    - name: mx-version
+      description: mendix version to compile
+    - name: tag
+      description: tag of mendix application
+  workspaces:
+    - name: output
+      description: The git repo will be cloned onto the volume backing this workspace
+  results:
+    - name: url
+      description: URL to image
+  steps:
+    - name: build-and-push
+      image: {{ .Values.images.imageBuild }}
+      env:
+        - name: MDA_FILE_PATH
+          value: $(inputs.params.mda-file)
+        - name: OUTPUT_IMAGE_URL
+          value: $(results.url.path)
+        - name: RUNTIME_BASE_IMAGE
+          value: {{ .Values.images.runtimeBase }}:$(inputs.params.mx-version)-rhel
+        - name: PUSH_URL
+          value: {{ .Values.images.imagePushURL }}
+        - name: TAG
+          value: $(inputs.params.tag)

@@ -1,0 +1,31 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: mx-pipeline-build-binding-{{ .Values.name }}
+spec:
+  params:
+    {{ if eq .Values.triggerType "gitlabwebhook" }}
+    - name: git-url
+      value: {{ if eq .Values.gitlabwebhook.protocol "http" }}$(body.repository.git_http_url){{ else }}$(body.repository.git_ssh_url){{ end }}
+    - name: git-revision
+      value: $(body.checkout_sha)
+    - name: git-refspec
+      value: $(body.ref)
+    {{ else }} # generic
+    - name: git-url
+      value: $(body.repo.url)
+    - name: git-revision
+      value: $(body.repo.revision)
+    - name: git-refspec
+      value: $(body.repo.refspec)
+    - name: namespace
+      value: $(body.namespace)
+    - name: env-internal-name
+      value: $(body.env-internal-name)
+    - name: kube-secret-name
+      value: $(body.kube-secret-name)
+    - name: constants-mode
+      value: $(body.constants-mode)
+    - name: scheduled-events-mode
+      value: $(body.scheduled-events-mode)
+    {{ end }}

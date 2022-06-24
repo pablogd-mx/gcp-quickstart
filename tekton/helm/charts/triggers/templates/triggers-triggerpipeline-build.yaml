@@ -1,0 +1,91 @@
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: mx-pipeline-build-template-{{ .Values.name }}
+spec:
+  params:
+    - name: git-url
+      description: The git repository url.
+    - name: git-revision
+      description: git revision to checkout (branch, tag, sha, ref…)
+      default: main
+    - name: git-refspec
+      description: (optional) git refspec to fetch before checking out revision
+      default: ""
+    - name: namespace
+      description: cluster namespace name to update.
+      default: default
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config.
+    {{ if eq .Values.triggerType "generic" }}
+    - name: constants-mode
+      description: |
+        mode to handle constants.
+        Available modes:
+        manual - ensures that constants on operator side are the same as inside .mda file.
+        auto - adds/removes missing constants if any.
+    - name: scheduled-events-mode
+      description: |
+        mode to handle scheduled events.
+        Available modes:
+        manual - ensures that scheduled events specified in myScheduledEvents CR field contains existing events.
+        auto - removes not existing scheduled events from myScheduledEvents CR field.
+    {{ end }}
+
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: mx-pipeline-build-run-{{ .Values.name }}-
+      spec:
+        serviceAccountName: tekton-triggers-mx-sa
+        pipelineRef:
+          name: {{ .Values.buildPipelineName }}
+        params:
+          {{ if eq .Values.triggerType "gitlabwebhook" }}
+          - name: git-url
+            value: $(tt.params.git-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: git-refspec
+            value: $(tt.params.git-refspec)
+          - name: namespace
+            value: {{ .Values.gitlabwebhook.operatorNamespace }}
+          - name: env-internal-name
+            value: {{ .Values.gitlabwebhook.mendixEnvironmentInernalName }}
+          - name: kube-secret-name
+            value: {{ .Values.gitlabwebhook.kubeConfigSecretName }}
+          - name: tag
+            value: $(tt.params.git-revision)
+          - name: tag
+            value: $(tt.params.git-revision)
+          - name: constants-mode
+            value: {{ .Values.gitlabwebhook.constantsMode }}
+          - name: scheduled-events-mode
+            value: {{ .Values.gitlabwebhook.scheduledEventsMode }}
+          {{ else }} # generic
+          - name: git-url
+            value: $(tt.params.git-url)
+          - name: git-revision
+            value: $(tt.params.git-revision)
+          - name: git-refspec
+            value: $(tt.params.git-refspec)
+          - name: namespace
+            value: $(tt.params.namespace)
+          - name: env-internal-name
+            value: $(tt.params.env-internal-name)
+          - name: kube-secret-name
+            value: $(tt.params.kube-secret-name)
+          - name: tag
+            value: $(tt.params.git-revision)
+          - name: constants-mode
+            value: $(tt.params.constants-mode)
+          - name: scheduled-events-mode
+            value: $(tt.params.scheduled-events-mode)
+          {{ end }}
+        workspaces:
+          - name: source
+            persistentVolumeClaim:
+              claimName: pipeline-pvc

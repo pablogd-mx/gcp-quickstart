@@ -1,0 +1,32 @@
+{{ if .Values.addAppConfigureTrigger }}
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: mx-pipeline-configure-binding-{{ .Values.name }}
+spec:
+  params:
+    - name: namespace
+      value: $(body.namespace)
+    - name: env-internal-name
+      value: $(body.env-internal-name)
+    - name: kube-secret-name
+      value: $(body.kube-secret-name)
+    - name: source-url
+      value: $(body.source-url)
+    - name: replicas
+      value: $(body.replicas)
+    - name: set-constants
+      value: $(body.set-constants)
+    - name: add-constants
+      value: $(body.add-constants)
+    - name: remove-constants
+      value: $(body.remove-constants)
+    - name: set-env-vars
+      value: $(body.set-env-vars)
+    - name: add-env-vars
+      value: $(body.add-env-vars)
+    - name: remove-env-vars
+      value: $(body.remove-env-vars)
+    - name: dtap-mode
+      value: $(body.dtap-mode)
+{{ end }}

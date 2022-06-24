@@ -1,0 +1,124 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-pipeline
+spec:
+  params:
+    - name: git-url
+      description: The git repository url
+    - name: git-revision
+      description: git revision to checkout (branch, tag, sha, ref…)
+      default: main
+    - name: git-refspec
+      description: (optional) git refspec to fetch before checking out revision
+      default: ""
+    - name: namespace
+      description: cluster namespace with mendix operator
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config. Can be skipped if pipeline in the same cluster.
+      default: none
+    - name: tag
+      description: tag name for the new image.
+    - name: constants-mode
+      description: |
+        mode to handle constants.
+        Available modes:
+        manual - ensures that constants on operator side are the same as inside .mda file.
+        auto - adds/removes missing constants if any.
+      default: auto
+    - name: scheduled-events-mode
+      description: |
+        mode to handle scheduled events.
+        Available modes:
+        manual - ensures that scheduled events specified in myScheduledEvents CR field contains existing events.
+        auto - removes not existing scheduled events from myScheduledEvents CR field.
+      default: auto
+  workspaces:
+    - name: source
+  tasks:
+    - name: fetch
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: refspec
+          value: $(params.git-refspec)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: version-extraction
+      runAfter:
+        - fetch
+      taskRef:
+        name: mxver
+      workspaces:
+        - name: output
+          workspace: source
+    - name: build-mda
+      runAfter:
+        - version-extraction
+      taskRef:
+        name: mxbuildmda
+      params:
+        - name: mx-version
+          value: $(tasks.version-extraction.results.mx-version)
+        - name: mpr-file
+          value: $(tasks.version-extraction.results.mpr-file)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: resolve-constants-events
+      runAfter:
+        - build-mda
+      taskRef:
+        name: resolve-constants-and-events
+      params:
+        - name: mda-file
+          value: $(tasks.build-mda.results.mda-file)
+        - name: namespace
+          value: $(params.namespace)
+        - name: env-internal-name
+          value: $(params.env-internal-name)
+        - name: kube-secret-name
+          value: $(params.kube-secret-name)
+        - name: constants-mode
+          value: $(params.constants-mode)
+        - name: scheduled-events-mode
+          value: $(params.scheduled-events-mode)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: build-push-image
+      runAfter:
+        - resolve-constants-events
+      taskRef:
+        name: build-push-image
+      params:
+         - name: mda-file
+           value: $(tasks.build-mda.results.mda-file)
+         - name: mx-version
+           value: $(tasks.version-extraction.results.mx-version)
+         - name: tag
+           value: $(params.tag)
+      workspaces:
+         - name: output
+           workspace: source
+    - name: k8spatch
+      runAfter:
+        - build-push-image
+      taskRef:
+        name: k8spatch
+      params:
+        - name: source-url
+          value: $(tasks.build-push-image.results.url)
+        - name: namespace
+          value: $(params.namespace)
+        - name: env-internal-name
+          value: $(params.env-internal-name)
+        - name: kube-secret-name
+          value: $(params.kube-secret-name)

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: mx-tekton-pipeline
+description: A Helm chart for Mendix Tekton Pipeline.
+version: 0.1
+

@@ -1,0 +1,51 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: mxbuildmda
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "mxbuildmda"
+spec:
+  description: >-
+    Builds MDA from Mendix app source code.
+  params:
+    - name: mx-version
+      description: mendix version to compile
+    - name: mpr-file
+      description: the project file path
+    - name: branch
+      description: branch to tag
+      type: string
+      default: trunk
+    - name: revision
+      type: string
+      default: HEAD
+    - name: tag-name
+      description: name of tag to create
+      type: string
+      default: 1.0.0
+  workspaces:
+    - name: output
+      description: The git repo will be cloned onto the volume backing this workspace
+  results:
+    - name: mda-file
+      description: compiled MDA path
+  steps:
+    - name: create-mda
+      image: {{ .Values.images.build }}:$(inputs.params.mx-version)
+      env:
+        - name: BUILD_PATH
+          value: $(workspaces.output.path)
+        - name: MPR_FILE_PATH
+          value: $(inputs.params.mpr-file)
+        - name: MDA_FILE_PATH
+          value: $(results.mda-file.path)
+        - name: BUILD_ID
+          value: $(inputs.params.build)
+        - name: BRANCH
+          value: $(inputs.params.branch)
+        - name: TAG_NAME
+          value: $(inputs.params.tag-name)

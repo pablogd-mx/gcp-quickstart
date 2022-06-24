@@ -1,0 +1,11 @@
+
+images:
+  fetch: 192.168.99.1:5000/mendix/gitinit:latest
+  verExtraction: 192.168.99.1:5000/mendix/tools:latest
+  build: 192.168.99.1:5000/mendix/mxbuild # tag depends from extracted mx version from source code
+  imageBuild: 192.168.99.1:5000/mendix/imagebuild:latest
+  k8sPatch: 192.168.99.1:5000/mendix/tools:latest
+  constantsAndEventsResolver: 192.168.99.1:5000/mendix/tools:latest
+
+  runtimeBase: private-cloud.registry.mendix.com/runtime-base # tag depends from received tag param in the pipeline
+  imagePushURL: 192.168.99.1:5000/result # tag depends from received tag param in the pipeline

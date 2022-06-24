@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: delete-app-pipeline
+spec:
+  params:
+    - name: namespace
+      description: k8s namespace with mendix-operator.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config. Can be empty.
+      default: none
+  tasks:
+    - name: delete-app-cr
+      taskRef:
+        name: delete-app-cr
+      params:
+        - name: namespace
+          value: $(params.namespace)
+        - name: env-internal-name
+          value: $(params.env-internal-name)
+        - name: kube-secret-name
+          value: $(params.kube-secret-name)

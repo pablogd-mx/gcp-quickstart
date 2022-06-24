@@ -1,0 +1,30 @@
+namespace: quickstart-connected
+cluster_mode: connected
+mask:
+  database_plan: true
+  storage_plan: true
+  ingress: true
+  registry: true
+  proxy: false
+  custom_tls: false
+database_plan:
+  name: eph-db
+  type: ephemeral
+storage_plan:
+  name: eph-st
+  type: ephemeral
+ingress:
+  type: kubernetes-ingress
+  enable_tls: false
+  k8s_ingress:
+    domain: quickstart-standalone.nl
+    useCustomIngressClass: true
+    customIngressClass: nginx
+    customIngressClassAsAnnotation: true
+    path: /
+  service: null
+registry:
+  type: google-gcr
+  generic_registry:
+    auth_pull_url: TODO
+    auth_push_url: TODO

@@ -1,0 +1,10 @@
+
+images:
+  fetch: 192.168.99.1:5000/mendix/fetch:v0.25.0
+  verExtraction: 192.168.99.1:5000/mendix/sqlite3:latest # TODO: update me
+  build: 192.168.99.1:5000/mendix/mxbuild # tag depends from extracted mx version from source code
+  imageBuild: 192.168.99.1:5000/mendix/imagebuild:1.0.0
+  k8sPatch: 192.168.99.1:5000/mendix/patch:latest # TODO: update me
+  imagePushURL: 192.168.99.1:5000/result # tag depends from received tag param in the pipeline
+  runtimeBase: 192.168.99.1:5000/mendix/runtime-base # tag depends from received tag param in the pipeline
+  constantsAndEventsResolver: # TODO: update me

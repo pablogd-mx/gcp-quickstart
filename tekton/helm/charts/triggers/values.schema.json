@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "required": [
+    "name",
+    "triggerType"
+  ],
+  "properties": {
+    "triggerType": {
+      "type": "string",
+      "pattern": "^(gitlabwebhook|generic)$"
+    }
+  }
+}

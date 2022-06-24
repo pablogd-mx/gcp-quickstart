@@ -1,0 +1,42 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: create-app-pipeline
+spec:
+  params:
+    - name: namespace
+      description: k8s namespace with mendix-operator.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: storage-plan-name
+      description: name of already created storage plan.
+    - name: database-plan-name
+      description: name of already created database plan.
+    - name: dtap-mode
+      description: |
+        mode for running the Mendix application.
+        Available options:
+          P - production
+          D - Development
+        Always set this to P in production environments.
+      default: D
+    - name: kube-secret-name
+      description: secret name with kube config. Can be empty.
+      default: none
+  tasks:
+    - name: create-app-cr
+      taskRef:
+        name: create-app-cr
+      params:
+        - name: namespace
+          value: $(params.namespace)
+        - name: env-internal-name
+          value: $(params.env-internal-name)
+        - name: storage-plan-name
+          value: $(params.storage-plan-name)
+        - name: database-plan-name
+          value: $(params.database-plan-name)
+        - name: dtap-mode
+          value: $(params.dtap-mode)
+        - name: kube-secret-name
+          value: $(params.kube-secret-name)

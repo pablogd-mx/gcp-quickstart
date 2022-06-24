@@ -1,0 +1,93 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: configure-app-cr
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/tags: mx
+    tekton.dev/displayName: "configure-app"
+spec:
+  description: >-
+    Deletes MendixApp CR. Mendix operator should take care about cleanup.
+  params:
+    - name: namespace
+      description: k8s namespace with mendix-operator.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config.
+    - name: source-url
+      description: .mda file url or oci-image url. Remains the same if empty.
+    - name: replicas
+      description: number of replicas. Remains the same if empty.
+    - name: set-constants
+      description: |
+        constants to set as JSON map. Replaces the old list with the new one. Value example: {"KEY":"VALUE"}.
+    - name: add-constants
+      description: |
+        constants to add as JSON map. Value example: {"KEY":"VALUE"}.
+    - name: remove-constants
+      description: |
+        constants to delete as JSON array. Value example: ["KEY1","KEY2"].
+    - name: set-env-vars
+      description: |
+        environment variables to set as JSON map. Replaces the old list with the new one. Value example: {"KEY":"VALUE"}.
+    - name: add-env-vars
+      description: |
+        environment variables to add as JSON map. Value example: {"KEY":"VALUE"}.
+    - name: remove-env-vars
+      description: |
+        environment variables to delete as JSON array. Value example: ["KEY1","KEY2"].
+    - name: dtap-mode
+      description: |
+        mode for running the Mendix application.
+        Available options:
+          P - production
+          D - Development
+        Always set this to P in production environments.
+  steps:
+    - name: configure-app
+      image: {{ .Values.images.configureAppEnv }}
+      script: |
+        #!/usr/bin/env bash
+        set -e
+
+        args=(
+          $(params.env-internal-name)
+          -n $(params.namespace)
+          --dtap-mode='$(params.dtap-mode)'
+          --add-constants='$(params.add-constants)'
+          --remove-constants='$(params.remove-constants)'
+          --add-env-vars='$(params.add-env-vars)'
+          --remove-env-vars='$(params.remove-env-vars)'
+        )
+
+        if [ "$(params.replicas)" != "none" ]; then
+          args+=(--replicas=$(params.replicas))
+        fi
+
+        if [ "$(params.source-url)" != "none" ]; then
+          args+=(--source-url=$(params.source-url))
+        fi
+
+        if [ "$(params.set-constants)" != "none" ]; then
+          args+=(--set-constants='$(params.set-constants)')
+        fi
+
+        if [ "$(params.set-env-vars)" != "none" ]; then
+          args+=(--set-env-vars='$(params.set-env-vars)')
+        fi
+
+        ./mxpc-pipeline-tools-cli app-cr-update "${args[@]}"
+
+        echo -n "MendixApp Custom Resource updated."
+        echo
+      env:
+        - name: KUBECONFIG
+          valueFrom:
+            secretKeyRef:
+              name: $(params.kube-secret-name)
+              key: kubeconf
+              optional: true

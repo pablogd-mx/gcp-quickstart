@@ -1,0 +1,111 @@
+apiVersion: privatecloud.mendix.com/v1alpha1
+kind: MendixApp
+metadata:
+  name: mendix-test
+spec:
+  database: # Specification of Database CR
+    servicePlan: eph-db
+  storage: # Specification of Storage CR
+    servicePlan: eph-st
+  runtimeDeploymentPodAnnotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: '8900'
+    prometheus.io/scrape: 'true'
+  mendixRuntimeVersion: 9.11.0.39533 # Mendix version to use for placeholder runtime image
+  sourceURL: https://sampleapp-standalone.s3.eu-west-1.amazonaws.com/Main+line-23.0.90.19.mda # URL of App's source MDA
+    #appURL: example-mendixapp.k8s-cluster.example.com # URL to access the app
+    #tls: # Optional, can be omitted : set a custom TLS configuration, overriding the default operator configuration
+    # Enable or disable TLS for the app
+    # enableTLS: true
+    # Optional: name of an existing kubernetes.io/tls secret containing the TLS certificate
+    #secretName: example-mendixapp-cert
+  # Optional: TLS certificate value (tls.crt)
+  #    certificate: |-
+  #      -----BEGIN CERTIFICATE-----
+  #      [...]
+  #      -----END CERTIFICATE-----
+  #    # Optional: TLS key value (tls.key)
+  #    key: |-
+  #      -----BEGIN PRIVATE KEY-----
+  #      [...]
+  #      -----END PRIVATE KEY-----
+  replicas: 1 # Number of replicas, set to 0 to stop all replicas
+  resources: # Optional, can be omitted : set resources for Mendix Runtime container
+    limits: # Upper limit - process will be stopped if it tries to use more
+      cpu: 500m # 500 millicores - half of a vCPU
+      memory: 512Mi # 512 megabytes - suitable for small-scale non-production apps
+    requests: # Lower limit - needs at least these resources
+      cpu: 250m
+      memory: 256Mi
+  #  runtimeDeploymentPodAnnotations: # Optional, can be omitted : set custom annotations for Mendix Runtime Pods
+  #    # example: inject the Linkerd proxy sidecar
+  #    linkerd.io/inject: enabled
+  #  serviceAnnotations: # Optional, can be omitted : specify the Service annotations
+  #    # example: custom AWS CLB configuration
+  #    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
+  #    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:eu-west-1:account:certificate/id
+  #    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "443"
+  #  endpointAnnotations: # Optional, can be omitted : set custom annotations for Ingress or OpenShift Route objects
+  #    # example: allow uploads of files up 100 MB in the NGINX Ingress Controller
+  #    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+  #    # example: deny access to /rest-doc
+  #    nginx.ingress.kubernetes.io/configuration-snippet: |
+  #      location /rest-doc {
+  #        deny all;
+  #        return 403;
+  #      }
+  #  ingressClassName: alb # Optional, can be omitted : specify the Ingress class
+  #  ingressPath: "/" # Optional, can be omitted : specify the Ingress path
+  #  ingressPathType: ImplementationSpecific # Optional, can be omitted : specify the Ingress pathType
+  runtime: # Configuration of the Mendix Runtime
+    logAutosubscribeLevel: INFO # Default logging level
+    mxAdminPassword: V2VsYzBtZSE= # base64 encoded password for MendixAdmin user. In this example, 'Welc0me!'; can be left empty keep password unchanged
+    debuggerPassword: V2VsYzBtZSE= # base64 encoded password for debuggerPassword. In this example, 'Welc0me!';
+    dtapMode: P # Security & runtime mode: P for production, D for development
+    logLevels: # Optional, can be omitted : set custom log levels for specific nodes
+      NodeOne: CRITICAL
+      NodeTwo: DEBUG
+#    microflowConstants: # Optional, can be omitted : set values for microflow constants
+#      MyFirstModule.Constant: "1234"
+#      Atlas_UI_Resources.Atlas_UI_Resources_Version: "2.5.4"
+#    scheduledEventExecution: SPECIFIED # Optional, can be omitted: specify which scheduled events should be enabled: ALL/NONE/SPECIFIED
+#    myScheduledEvents: # List which scheduled events should be enabled; should only be used if scheduledEventExecution is set to SPECIFIED
+#      - MyFirstModule.MyScheduledEvent
+#    # Mendix Runtime Jetty options, in JSON format; validated and applied by the mx-m2ee-sidecar container
+#    jettyOptions: |-
+#      {
+#        "max_form_content_size": 10485760,
+#        "use_blocking_connector": false
+#      }
+#    environmentVariables: # Optional, can be omitted : set environment variables for the Mendix Runtime container
+#      - name: MY_ENVIRONMENT_VARIABLE # name of the environment variable
+#        value: debug # value of the environment variable
+#        # valueFrom can be used instead of value to load values from a Secret:
+#        #valueFrom:
+#        #  secretKeyRef:
+#        #    name: proxy-secret
+#        #    key: java-proxy-secret
+#      - name: JAVA_TOOL_OPTIONS # name of the environment variable
+#        value: -Dhttp.proxyHost=10.0.0.100 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=10.0.0.100 -Dhttps.proxyPort=8443 -Dhttp.nonProxyHosts="localhost|host.example.com"
+#    clientCertificates: # Optional, can be omitted : set client certificates for TLS authentication
+#      - key: Q0VSVElGSUNBVEU= # base64-encoded PKCS12 certificate
+#        password: # base64-encoded password for the certificate, cannot be empty
+#        pinTo: # Optional, list of web services or domain names where this certificate should be used
+#          - "www.example.com"
+#          - "service.www.example.com"
+#    # All custom Mendix Runtime parameters go here, in JSON format; validated and applied by the mx-m2ee-sidecar container
+#    customConfiguration: |-
+#      {
+#        "ApplicationRootUrl": "https://myapp1-dev.mendix.example.com"
+#      }
+#  runtimeMetricsConfiguration: # Optional, can be omitted : set Runtime metrics configuration
+#    mode: native # Metrics collection mode : native or compatibility
+#    interval: "PT1M" # Optional, can be omitted : set Prometheus scrape interval
+#    mxAgentConfig: |- # Optional, can be omitted : specify configuration for collecting additional metrics
+#      {
+#        …
+#      }
+#    mxAgentInstrumentationConfig: |- # Optional, can be omitted : specify instrumentation configuration for collecting additional metrics
+#      {
+#        …
+#      }

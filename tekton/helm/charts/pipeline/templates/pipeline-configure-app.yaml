@@ -1,0 +1,81 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: configure-app-pipeline
+spec:
+  params:
+    - name: namespace
+      description: k8s namespace with mendix-operator.
+    - name: env-internal-name
+      description: internal name of mendix application.
+    - name: kube-secret-name
+      description: secret name with kube config. Can be empty.
+      default: none
+    - name: source-url
+      description: .mda file url or oci-image url. Remains the same if empty.
+      default: none
+    - name: replicas
+      description: Number of replicas. Remains the same if empty.
+      default: none
+    - name: set-constants
+      description: |
+        Constants to set as JSON map. Replaces the old list with the new one. Value example: {"KEY":"VALUE"}.
+      default: none
+    - name: add-constants
+      type: string
+      description: |
+        Constants to add as JSON map. Value example: {"KEY":"VALUE"}.
+      default: "{}"
+    - name: remove-constants
+      description: |
+        Constants to delete as JSON array. Value example: ["KEY1","KEY2"].
+      default: "[]"
+    - name: set-env-vars
+      description: |
+        Environment variables to set as JSON map. Replaces the old list with the new one. Value example: {"KEY":"VALUE"}.
+      default: none
+    - name: add-env-vars
+      description: |
+        Environment variables to add as JSON map. Value example: {"KEY":"VALUE"}.
+      default: "{}"
+    - name: remove-env-vars
+      description: |
+        Environment variables to delete as JSON array. Value example: ["KEY1","KEY2"].
+      default: "[]"
+    - name: dtap-mode
+      description: |
+        mode for running the Mendix application.
+        Available options:
+          P - production
+          D - Development
+        Always set this to P in production environments.
+      default: ""
+  tasks:
+    - name: configure-app-cr
+      taskRef:
+        name: configure-app-cr
+      params:
+        - name: namespace
+          value: $(params.namespace)
+        - name: env-internal-name
+          value: $(params.env-internal-name)
+        - name: kube-secret-name
+          value: $(params.kube-secret-name)
+        - name: source-url
+          value: $(params.source-url)
+        - name: replicas
+          value: $(params.replicas)
+        - name: set-constants
+          value: $(params.set-constants)
+        - name: add-constants
+          value: $(params.add-constants)
+        - name: remove-constants
+          value: $(params.remove-constants)
+        - name: set-env-vars
+          value: $(params.set-env-vars)
+        - name: add-env-vars
+          value: $(params.add-env-vars)
+        - name: remove-env-vars
+          value: $(params.remove-env-vars)
+        - name: dtap-mode
+          value: $(params.dtap-mode)
