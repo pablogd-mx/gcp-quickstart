@@ -1,6 +1,6 @@
 
 
-# Azure Mendix quickstart
+# GCP Mendix quickstart
 GCP GKE Mendix Private Cloud Quickstart
 
     Scripted install of GKE Cluster in Google Cloud.
