@@ -5,8 +5,8 @@ export GKE_REGION=TODO #full list available here: https://cloud.google.com/compu
 export GKE_CLUSTER_NAME= TODO
 
 #Connected Mode
-export CLUSTER_ID=f2d74384-fed8-4cf0-b00b-90ed1e7d3eff
-export CLUSTER_SECRET=ID65Wj1qA5SAbxXG
+export CLUSTER_ID=TODO
+export CLUSTER_SECRET=TODO
 export GKE_NS_Connected=quickstart-connected
 
 #Standalone Mode
