@@ -26,10 +26,10 @@ ingress:
 registry:
   type: generic
   generic_registry:
-    auth_pull_url: pablok8sreg.azurecr.io
-    auth_push_url: pablok8sreg.azurecr.io
-    registry_name: pablok8sreg
+    auth_pull_url: TODO
+    auth_push_url: TODO
+    registry_name: TODO
     enable_auth: true
-    auth_user: pablok8sreg
-    auth_password: c=SiKjhMWCiyOSyGNKhtX5VfSbfYrwO7
+    auth_user: TODO
+    auth_password: TODO
     link_secret_to_service_account: false
