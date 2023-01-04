@@ -24,8 +24,8 @@ GCP GKE Mendix Private Cloud Quickstart
 
 # Configurations
 
-## AKS
-#### env-aks.sh
+### Create the following env-gcp file
+#### env-gcp.sh
 
   - export PROJECT_ID= TODO
   - export GKE_ARTIFACTS_REGISTRY=mendix-test
